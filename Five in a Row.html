@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>五子棋遊戲</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+
+    #gameCanvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const context = canvas.getContext('2d');
+    const blockSize = 40;
+    const boardSize = 10;
+    const board = [];
+    let currentPlayer = 1;
+    let isGameOver = false;
+
+    // 初始化棋盤數據
+    for (let i = 0; i < boardSize; i++) {
+      board.push(new Array(boardSize).fill(0));
+    }
+
+    // 繪製棋盤
+    function drawBoard() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+          context.beginPath();
+          context.rect(col * blockSize, row * blockSize, blockSize, blockSize);
+          context.strokeStyle = '#000';
+          context.stroke();
+
+          if (board[row][col] === 1) {
+            context.fillStyle = 'black';
+            context.fill();
+          } else if (board[row][col] === 2) {
+            context.fillStyle = 'white';
+            context.fill();
+          }
+        }
+      }
+    }
+
+    // 落子判斷
+    function placePiece(event) {
+      if (isGameOver) return;
+
+      const x = event.offsetX;
+      const y = event.offsetY;
+      const col = Math.floor(x / blockSize);
+      const row = Math.floor(y / blockSize);
+
+      if (board[row][col] === 0) {
+        board[row][col] = currentPlayer;
+        drawBoard();
+
+        if (checkWin(row, col, currentPlayer)) {
+          isGameOver = true;
+          setTimeout(() => {
+            alert(`玩家 ${currentPlayer === 1 ? '黑子' : '白子'} 獲勝！`);
+            resetBoard();
+          }, 100);
+        } else {
+          currentPlayer = 3 - currentPlayer; // 切換玩家
+        }
+      }
+    }
+
+    // 勝利條件判斷
+    function checkWin(row, col, currentPlayer) {
+      const directions = [
+        [1, 0],
+        [0, 1],
+        [1, 1],
+        [1, -1],
+      ];
+
+      for (let [dx, dy] of directions) {
+        let count = 1;
+        for (let i = 1; i < 5; i++) {
+          const newRow = row + dx * i;
+          const newCol = col + dy * i;
+          if (newRow < 0 || newRow >= boardSize || newCol < 0 || newCol >= boardSize) {
+            break;
+          }
+
+          if (board[newRow][newCol] === currentPlayer) {
+            count++;
+          } else {
+            break;
+          }
+        }
+
+        for (let i = 1; i < 5; i++) {
+          const newRow = row - dx * i;
+          const newCol = col - dy * i;
+          if (newRow < 0 || newRow >= boardSize || newCol < 0 || newCol >= boardSize) {
+            break;
+          }
+
+          if (board[newRow][newCol] === currentPlayer) {
+            count++;
+          } else {
+            break;
+          }
+        }
+
+        if (count >= 5) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // 重置棋盤
+    function resetBoard() {
+      for (let i = 0; i < boardSize; i++) {
+        for (let j = 0; j < boardSize; j++) {
+          board[i][j] = 0;
+        }
+      }
+      currentPlayer = 1;
+      isGameOver = false;
+      drawBoard();
+    }
+
+    // 監聽滑鼠點擊事件
+    canvas.addEventListener('click', placePiece);
+
+    // 繪製初始棋盤
+    drawBoard();
+  </script>
+</body>
+</html>
